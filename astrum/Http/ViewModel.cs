@@ -619,6 +619,20 @@ namespace Astrum.Http
         public bool IsFuryRaidEnable { get; set; }
         public string FuryRaidEventId { get; set; }
         public bool IsFuryRaid { get; set; }
+        public bool IsBigBoss { get; set; }
+        private bool _isbossfull;
+        public bool IsBossFull
+        {
+            get
+            {
+                return _isbossfull;
+            }
+            set
+            {
+                _isbossfull = value;
+                NotifyPropertyChanged("IsBossFull");
+            }
+        }
         //public List<RaidBattleInfo> FuryRaidFindList { get; set; }
 
         public bool IsLimitedRaidEnable { get; set; }
@@ -689,21 +703,7 @@ namespace Astrum.Http
                 NotifyPropertyChanged("FeverProgress");
             }
         }
-
-        private bool _isbossfull;
-        public bool isBossFull
-        {
-            get
-            {
-                return _isbossfull;
-            }
-            set
-            {
-                _isbossfull = value;
-                NotifyPropertyChanged("isBossFull");
-            }
-        }
-
+        
         public bool IsStaminaEmpty { get; set; }
 
         private int _keepStamina = 100;
