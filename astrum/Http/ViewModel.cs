@@ -676,6 +676,34 @@ namespace Astrum.Http
             }
         }
 
+        private int _feverprogress;
+        public int FeverProgress
+        {
+            get
+            {
+                return _feverprogress;
+            }
+            set
+            {
+                _feverprogress = value;
+                NotifyPropertyChanged("FeverProgress");
+            }
+        }
+
+        private bool _isbossfull;
+        public bool isBossFull
+        {
+            get
+            {
+                return _isbossfull;
+            }
+            set
+            {
+                _isbossfull = value;
+                NotifyPropertyChanged("isBossFull");
+            }
+        }
+
         public bool IsStaminaEmpty { get; set; }
 
         private int _keepStamina = 100;
