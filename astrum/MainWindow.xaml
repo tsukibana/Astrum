@@ -594,6 +594,7 @@
                     <ProgressBar x:Name="FeverProgress"
                                  Grid.Column="1" Height="8" Width="100"
                                  Minimum="0" Maximum="100"
+                                 Visibility="{Binding IsFuryRaidEnable,Converter={StaticResource BooleanToVisibilityConverter}}"
                                  Value="{Binding FeverProgress,FallbackValue=50,Mode=OneWay,TargetNullValue=0}"
                                  ToolTip="{Binding FeverProgress}"
                                  Foreground="{Binding FeverProgress,Converter={StaticResource ProgressBarForegoundConvert}}"

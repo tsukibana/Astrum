@@ -615,8 +615,19 @@ namespace Astrum.Http
         }
 
 
-
-        public bool IsFuryRaidEnable { get; set; }
+        private bool _isfuryraidenable;
+        public bool IsFuryRaidEnable
+        {
+            get
+            {
+                return _isfuryraidenable;
+            }
+            set
+            {
+                _isfuryraidenable = value;
+                NotifyPropertyChanged("IsFuryRaidEnable");
+            }
+        }
         public string FuryRaidEventId { get; set; }
         public bool IsFuryRaid { get; set; }
         public bool IsBigBoss { get; set; }
@@ -638,12 +649,15 @@ namespace Astrum.Http
         public bool IsLimitedRaidEnable { get; set; }
         public string LimitedRaidEventId { get; set; }
         public bool IsLimitedRaid { get; set; }
+        public bool IsBreedingEnable { get; set; }
+        public string BreedingEventId { get; set; }
+        public bool IsBreedingRaid { get; set; }
 
         public bool CanAttack
         {
             get
             {
-                return (IsFuryRaidEnable == IsFuryRaid) && (IsLimitedRaidEnable == IsLimitedRaid);
+                return (IsFuryRaidEnable == IsFuryRaid) && (IsLimitedRaidEnable == IsLimitedRaid) && (IsBreedingEnable == IsBreedingRaid) ;
             }
         }
 

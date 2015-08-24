@@ -42,8 +42,8 @@ namespace Astrum.Json.Raid
         public bool isPlaying { get; set; }
         public bool isLose { get; set; }
         public bool isNew { get; set; }
-        public int joinNum { get; set; }
-
+        public int joinNum { get; set; }        
+        public Fever fever { get; set; }
         public RescueInfo rescue { get; set; }
     }
 
@@ -53,13 +53,14 @@ namespace Astrum.Json.Raid
     }
 
     public class BossBattleResultInfo
-    {
-        public Result result { get; set; }
+    {        
+        public Result result { get; set; }        
     }
 
     public class Result
     {
         public BossInfo afterBoss { get; set; }
+        public bool isLost { get; set; }
         public string resultType { get; set; }
     }
 
@@ -104,5 +105,16 @@ namespace Astrum.Json.Raid
         public bool isNew { get; set; }
 
         public RaidBattleInfo target { get; set; }
+    }
+
+    public class BreedingRaidInfo
+    {
+        public string _id { get; set; }
+
+        public bool isNew { get; set; }
+
+        public Fever fever { get; set; }
+
+        public RaidBattleInfo target { get; set; }      
     }
 }

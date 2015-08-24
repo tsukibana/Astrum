@@ -75,6 +75,7 @@ namespace Astrum.Http
             ViewModel.IsBossFull = false;
             ViewModel.IsQuestEnable = true;
             ViewModel.IsGuildBattleEnable = false;
+            ViewModel.FeverProgress = 0;
 
             ViewModel.MinStaminaStock = DEFAULT_STOCK;
             ViewModel.MinBpStock = DEFAULT_STOCK;
@@ -389,19 +390,22 @@ namespace Astrum.Http
                         //LimitedRaidInfo();
 
                     }
+                    else if ("breeding".Equals(@event.type))
+                    {
+                        ViewModel.IsBreedingEnable = true;
+                        ViewModel.BreedingEventId = @event._id;
+                    }
                 }
             }
         }
 
         public void Quest()
         {
-
             Access("stage");
-
             //var areaId = "chapter1-1";
-            var stage = EnterStage();
-            var areaId = stage._id;            
-
+            var stage = ChoseMap();
+            var areaId = stage._id;
+                                                                        
             while (ViewModel.IsRunning)
             {
 
@@ -424,27 +428,36 @@ namespace Astrum.Http
                     break;
                 }
 
-                //ViewModel.IsFuryRaid = false;
+                ViewModel.IsFuryRaid = false;
                 ViewModel.IsLimitedRaid = false;
-
-                if (stage.furyraid != null)
-                {
-                    if (ViewModel.Fever)
-                    {
-                        if (stage.furyraid.rare == 4)
-                        {
-                            ViewModel.IsBigBoss = true;
-                        }
-                    }                    
-                }
-                else if (ViewModel.IsBigBoss)
-                {
-                    FuryRaid();
-                    ViewModel.IsBigBoss = false;
-                }
-
+                ViewModel.IsBreedingRaid = false;
+                
                 if (ViewModel.IsFuryRaidEnable)
-                {                    
+                {
+                    if (stage.status.furyraid.fever != null)
+                    {
+                        ViewModel.Fever = true;
+                    }
+                    else
+                    {
+                        ViewModel.Fever = false;
+                    }
+
+                    if (stage.furyraid != null)
+                    {
+                        if (ViewModel.Fever)
+                        {
+                            if (stage.furyraid.rare == 4)
+                            {
+                                ViewModel.IsBigBoss = true;
+                            }
+                        }
+                    }
+                    else if (ViewModel.IsBigBoss)
+                    {
+                        FuryRaid();
+                        ViewModel.IsBigBoss = false;
+                    }
                     if (!ViewModel.Fever)
                     {
                         if (stage.status.furyraid.find != null)
@@ -482,6 +495,28 @@ namespace Astrum.Http
                     }
                 }
 
+                if (ViewModel.IsBreedingEnable)
+                {
+                    if(stage.status.breeding.fever != null)
+                    {
+                        ViewModel.Fever = true;
+                    }
+                    else
+                    {
+                        ViewModel.Fever = false;
+                    }
+                    var BreedingRaidId = stage.status.breeding._id;
+                    if (BreedingRaidId != null)
+                    {
+                        ViewModel.IsBreedingRaid = true;
+                        if (ViewModel.CanFullAttackForEvent)
+                        {
+                            BreedingRaid();
+                            ViewModel.IsBreedingRaid = false;
+                        }
+                    }
+                }
+
                 if (stage.status.raid != null && !ViewModel.Fever)
                 {
                     if (stage.status.raid.find != null)
@@ -499,7 +534,7 @@ namespace Astrum.Http
                         }
                     }
                 }
-
+                
                 if (ViewModel.IsStaminaEmpty)
                 {
                     bool staminaGreaterThanKeep = ViewModel.StaminaValue >= ViewModel.KeepStamina;
@@ -542,13 +577,36 @@ namespace Astrum.Http
                 if(!ViewModel.Fever && ViewModel.IsBossFull && stage.furyraid == null)
                 {
                     break;
-                }                
-                stage = ForwardStage(areaId);                                                    
+                }
+                if(ViewModel.IsBreedingEnable)
+                {
+                    stage = BreedingForwardStage(areaId);
+                }
+                else
+                {
+                    stage = ForwardStage(areaId);
+                }                                                                                    
+            }
+        }
+
+        private StageInfo ChoseMap()
+        {
+            if(ViewModel.IsBreedingEnable)
+            {
+                var map = EnterMap();
+                var areaId = map.stage[0]._id;
+                var stage = EnterBreedingStage(areaId);
+                return stage;
+            }
+            else
+            {
+                var stage = EnterStage();
+                return stage;
             }
         }
 
         private StageInfo EnterStage()
-        {
+        {            
             var result = GetXHR("http://astrum.amebagames.com/_/stage");
             var stage = JsonConvert.DeserializeObject<StageInfo>(result);
 
@@ -574,6 +632,48 @@ namespace Astrum.Http
 
             return stage;
         }
+
+        private BreedingMap EnterMap()
+        {
+            Access("breedingmap");
+            var eventId = ViewModel.BreedingEventId;
+            var result = GetXHR("http://astrum.amebagames.com/_/event/map?eventId=" + Uri.EscapeDataString(eventId));
+            var map = JsonConvert.DeserializeObject<BreedingMap>(result);
+            
+            Delay(DELAY_SHORT);
+            return map;
+        }
+        
+        private StageInfo EnterBreedingStage(string areaId)
+        {
+            Access("stage");
+            var eventId = ViewModel.BreedingEventId;
+            var result = GetXHR("http://astrum.amebagames.com/_/breeding/stage?areaId=" + areaId + "&" + Uri.EscapeDataString(eventId));
+            var stage = JsonConvert.DeserializeObject<StageInfo>(result);
+
+            PrintStageInfo(stage);
+            UpdateStageView(stage);
+            Delay(DELAY_SHORT);
+
+            return stage;
+        } 
+        
+        private StageInfo BreedingForwardStage(string areaId)
+        {
+            var values = new Dictionary<string, object>
+                {
+                   { "areaId", areaId },
+                   {"eventId",ViewModel.BreedingEventId }
+                };
+            var result = PostXHR("http://astrum.amebagames.com/_/breeding/stage", values);
+            var stage = JsonConvert.DeserializeObject<StageInfo>(result);
+
+            PrintStageInfo(stage);
+            UpdateStageView(stage);
+            Delay(DELAY_SHORT);
+
+            return stage;
+        }        
 
         public void UseItem(string type, string itemId, int value)
         {
@@ -744,8 +844,7 @@ namespace Astrum.Http
 
         public void FuryRaid()
         {
-            FuryRaidInfo raidInfo = FuryRaidInfo();
-            ViewModel.Fever = raidInfo.fever.progress == 100;
+            FuryRaidInfo raidInfo = FuryRaidInfo();            
             ViewModel.FeverProgress = raidInfo.fever.progress;
                         
             raidInfo = FuryRaidBoss();
@@ -775,7 +874,7 @@ namespace Astrum.Http
                     }
                 }
             }
-            if (raidInfo.rescue != null)
+            if (raidInfo.rescue != null && !ViewModel.Fever)
             {
                 foreach (var battleInfo in raidInfo.rescue.list)
                 {
@@ -785,7 +884,9 @@ namespace Astrum.Http
                         loop = FuryRaidBattle(battleInfo._id);
                     }
                 }
-            }            
+            }
+            raidInfo = FuryRaidInfo();            
+            ViewModel.FeverProgress = raidInfo.fever.progress;
             raidInfo = FuryRaidBoss();
             ViewModel.IsBossFull = raidInfo.find.list.Count >= 3 ? true : false;            
         }
@@ -998,7 +1099,86 @@ namespace Astrum.Http
             Delay(DELAY_LONG);
 
         }
+        public void BreedingRaid()
+        {
+            var raidInfo = BreedingRaidInfo();
 
+            var loop = raidInfo.target != null && ViewModel.CanFullAttackForEvent;
+
+            while (loop)
+            {
+                loop = BreedingRaidBattle(raidInfo.target._id);
+            }
+
+        }
+
+        private BreedingRaidInfo BreedingRaidInfo()
+        {
+            var eventId = ViewModel.BreedingEventId;
+            string result = GetXHR("http://astrum.amebagames.com/_/event/breeding?_id=" + Uri.EscapeDataString(eventId));
+            var raidInfo = JsonConvert.DeserializeObject<BreedingRaidInfo>(result);
+
+            ViewModel.Fever = raidInfo.fever != null;
+
+            Delay(DELAY_SHORT);
+            return raidInfo;
+        }
+
+        public bool BreedingRaidBattle(string raidId)
+        {
+            var battleInfo = BreedingRaidBattleInfo(raidId);
+
+            if (battleInfo.isPlaying)
+            {
+                var hp = battleInfo.hp - battleInfo.totalDamage;
+
+                var attackType = hp > EASY_BOSS_HP ? FULL : NORMAL;
+                var needBp = hp > EASY_BOSS_HP ? BP_FULL : BP_NORMAL;
+
+                if (ViewModel.Fever)
+                {
+                    int quantity = needBp - ViewModel.BpValue;
+                    if (quantity > 0 && quantity <= ViewModel.CanUseBpQuantity)
+                    {
+                        UseItem(ITEM_BP, INSTANT_MINI_BP, quantity);
+                    }
+                }
+
+                if (ViewModel.BpValue >= needBp)
+                {
+                    BreedingRaidBattleAttack(battleInfo._id, attackType);
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private RaidBattleInfo BreedingRaidBattleInfo(string raidId)
+        {
+            var result = GetXHR("http://astrum.amebagames.com/_/breeding/battle?_id=" + Uri.EscapeDataString(raidId));
+            var battleInfo = JsonConvert.DeserializeObject<RaidBattleInfo>(result);
+
+            PrintRaidBattleInfo(battleInfo);
+            UpdateBpAfterRaidBattle(battleInfo);
+
+            Delay(DELAY_SHORT);
+            return battleInfo;
+        }
+
+        private void BreedingRaidBattleAttack(string raidId,string attackType)
+        {
+            var values = new Dictionary<string, object>
+            {
+                { "_id", raidId },
+                { "attackType", attackType }
+            };
+            //first
+            var battleResult = PostXHR("http://astrum.amebagames.com/_/breeding/battle", values);
+            var battleResultInfo = JsonConvert.DeserializeObject<BossBattleResultInfo>(battleResult);
+            
+            PrintBossBattleResult(battleResultInfo);
+            Delay(DELAY_LONG);
+        }
 
         public bool StartGuildBattle()
         {

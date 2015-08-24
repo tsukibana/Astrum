@@ -67,6 +67,7 @@ namespace Astrum.Json.Stage
         public StageRaidInfo raid { get; set; }
         public LimitedRaidInfo limitedraid { get; set; }
         public StageRaidInfo furyraid { get; set; }
+        public BreedingRaidInfo breeding { get; set; }
         public bool guild { get; set; }
     }
 
@@ -104,4 +105,19 @@ namespace Astrum.Json.Stage
         public bool isLastBoss { get; set; }
     }
 
+    public class BreedingMap
+    {
+        public List<BreedingStageInfo> stage { get; set; }
+    }
+
+    public class BreedingStageInfo
+    {
+        public string _id { get; set; }
+        public bool isClear { get; set; }
+        public bool isNew { get; set; }
+        public string name { get; set; }
+        public int order { get; set; }
+        public int status { get; set;}
+        public int stock { get; set; }
+    }
 }
