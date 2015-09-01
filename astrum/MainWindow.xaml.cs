@@ -348,11 +348,9 @@ namespace Astrum
                                     client.SpecialArea();
                                 }
                                 else
-                                {
+                                {                                    
                                     client.Quest();
                                 }
-
-
                                 if(client.ViewModel.IsStaminaEmpty)
                                 {
                                     client.CountDown(AstrumClient.SECOND * 30);

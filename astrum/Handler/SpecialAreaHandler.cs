@@ -23,7 +23,7 @@ namespace Astrum.Handler
         public void CheckExtraMap()
         {
             MapInfo map = ExtraMap();
-            if(map.list[0].stock == 0 && map.list[0].status == 1)
+            if(map.list[0].stock == 0 && map.list[0].status == 2)
             {
                 _client.ViewModel.IsSpecialAreaEnable = false;
             }
